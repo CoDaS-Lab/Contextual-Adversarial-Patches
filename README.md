@@ -10,9 +10,14 @@ The utilization of spatial context to improve accuracy in most fast object detec
 Tested with pytorch 1.1 and python 3.6 \
 An environment file has been provided.
 
+ZB: has to install tqdm in addition to environment.yml
+
 ## Dataset creation
 
 Download PASCAL VOC data. 
+
+ZB: The host.robots.ox.ac.uk site will take a while to respond but there are 
+alternative download sites as searched on google. All data will get extracted to VOCdevkit/
 ```
 wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
@@ -26,8 +31,12 @@ cat 2007_train.txt 2007_val.txt 2012_*.txt > voc_train.txt
 ```
 
 Insert appropriate Devkit path. Look for occurrences of <devkit_root> in the project.
+
+ZB: change to /projects/f_ps848_1/pascalvoc and run command below to regenerate dataset/no_class_overlap_clean_test 
+with correct path
+
 ```python
-python filter_PASCAL_VOC.py PASCAL_VOC_annotations.txt <devkit_root>/VOCdevkit/VOC2007/ImageSets/Main/test.txt
+python filter_PASCAL_VOC.py PASCAL_VOC_annotations.txt /projects/f_ps848_1/pascalvoc/VOCdevkit/VOC2007/ImageSets/Main/test.txt
 ```
 
 This script reads the annotation txt file containing the bounding box and size information of each image in PASCAL VOC 2007 and finds images for each class where no ground truth boxes of that class overlap with our patch location.
@@ -35,6 +44,11 @@ This script reads the annotation txt file containing the bounding box and size i
 The image sets used for the experiments in the paper are provided in dataset/no_class_overlap_clean_test
 
 ## Download Pretrained Weights
+ZB:
+```
+mkdir weights
+```
+
 Download darknet weights
 ```
 cd weights

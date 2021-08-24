@@ -115,7 +115,7 @@ for key, value in sorted(classes.items()):
 # open files for each class
 fid_list = []
 dataset_folder_prefix = './dataset/no_class_overlap_clean_test/'
-jpeg_prefix = '<devkit_root>/VOCdevkit/VOC2007/JPEGImages/'
+jpeg_prefix = '/projects/f_ps848_1/pascalvoc/VOCdevkit/VOC2007/JPEGImages/'
 
 if not os.path.exists(dataset_folder_prefix):
     os.makedirs(dataset_folder_prefix)

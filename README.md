@@ -33,7 +33,7 @@ cat 2007_train.txt 2007_val.txt 2012_*.txt > voc_train.txt
 Insert appropriate Devkit path. Look for occurrences of <devkit_root> in the project.
 
 ZB: change to /projects/f_ps848_1/pascalvoc and run command below to regenerate dataset/no_class_overlap_clean_test 
-with correct path
+with correct path. Also has to replace those in dataset/no_class_overlap_clean_test/\[class\]\_test_half\_\[1,2\].txt manually
 
 ```python
 python filter_PASCAL_VOC.py PASCAL_VOC_annotations.txt /projects/f_ps848_1/pascalvoc/VOCdevkit/VOC2007/ImageSets/Main/test.txt
@@ -71,7 +71,7 @@ bash run_pipeline_per_image_patch.sh
 
 This script trains contextual adversarial patch per image of a chosen category and evaluates YOLO on the patched images. Please change the VOC category name and the category index to run for desired category.
 
-ZB: category names and index are based on `classes` in train_per_image_patch.py and are given as arguments in run_pipeline_per_image_patch.sh to train_per_image_patch.py as the path names (use replace) and `reqd_class_index` (the 1st number) respectively 
+ZB: category names and targeted class index are based on `classes` in train_per_image_patch.py and are given as arguments in run_pipeline_per_image_patch.sh to train_per_image_patch.py as the path names (use replace) and `reqd_class_index` (the 1st number) respectively 
 
 ```
 classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", \

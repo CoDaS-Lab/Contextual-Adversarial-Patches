@@ -1,17 +1,11 @@
-import torch
-import numpy as np
-from scipy.io import savemat
-
-import time
-import math
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
+
 from utils import *
-import pdb
 
 
-def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW, noobject_scale, object_scale, sil_thresh, seen):
+def build_targets(pred_boxes, target, anchors, num_anchors, num_classes, nH, nW, noobject_scale, object_scale,
+                  sil_thresh, seen):
     nB = target.size(0)
     nA = num_anchors
     nC = num_classes
@@ -211,8 +205,15 @@ class RegionLoss(nn.Module):
             pred_boxes.transpose(0, 1).contiguous().view(-1, 4))
         t2 = time.time()
 
-        nGT, nCorrect, coord_mask, conf_mask, cls_mask, tx, ty, tw, th, tconf, tcls = build_targets(pred_boxes, target.data, self.anchors, nA, nC,
-                                                                                                    nH, nW, self.noobject_scale, self.object_scale, self.thresh, self.seen)
+        nGT, nCorrect, coord_mask, conf_mask, cls_mask, tx, ty, tw, th, tconf, tcls = build_targets(pred_boxes,
+                                                                                                    target.data,
+                                                                                                    self.anchors, nA,
+                                                                                                    nC,
+                                                                                                    nH, nW,
+                                                                                                    self.noobject_scale,
+                                                                                                    self.object_scale,
+                                                                                                    self.thresh,
+                                                                                                    self.seen)
         cls_mask = (cls_mask == 1)
         nProposals = int((conf > 0.25).sum().item())
 
@@ -235,27 +236,26 @@ class RegionLoss(nn.Module):
         t3 = time.time()
 
         loss_x = self.coord_scale * \
-            nn.MSELoss(size_average=False)(
-                x * coord_mask, tx * coord_mask) / 2.0
+                 nn.MSELoss(size_average=False)(
+                     x * coord_mask, tx * coord_mask) / 2.0
         loss_y = self.coord_scale * \
-            nn.MSELoss(size_average=False)(
-                y * coord_mask, ty * coord_mask) / 2.0
+                 nn.MSELoss(size_average=False)(
+                     y * coord_mask, ty * coord_mask) / 2.0
         loss_w = self.coord_scale * \
-            nn.MSELoss(size_average=False)(
-                w * coord_mask, tw * coord_mask) / 2.0
+                 nn.MSELoss(size_average=False)(
+                     w * coord_mask, tw * coord_mask) / 2.0
         loss_h = self.coord_scale * \
-            nn.MSELoss(size_average=False)(
-                h * coord_mask, th * coord_mask) / 2.0
+                 nn.MSELoss(size_average=False)(
+                     h * coord_mask, th * coord_mask) / 2.0
         loss_conf = nn.MSELoss(size_average=False)(
             conf * conf_mask, tconf * conf_mask) / 2.0
         if cls.size(0) == 0 and tcls.size(0) == 0:
             loss_cls = torch.Tensor([0]).cuda()
         else:
             loss_cls = self.class_scale * \
-                nn.CrossEntropyLoss(size_average=False)(cls, tcls)
+                       nn.CrossEntropyLoss(size_average=False)(cls, tcls)
 
-
-# defense loss begin
+        # defense loss begin
 
         # indices of detections matched to gt
         inds = torch.nonzero(cls_mask_orig)
@@ -276,18 +276,22 @@ class RegionLoss(nn.Module):
         # get the corners of boxes rather than center
         pred_boxes2_corners = torch.zeros_like(pred_boxes_orig).long()
         pred_boxes2_corners[:, 0] = torch.floor(torch.max(
-            pred_boxes2[:, 0] - pred_boxes2[:, 2] / 2, torch.zeros_like(pred_boxes2[:, 0] - pred_boxes2[:, 2] / 2))).long()
+            pred_boxes2[:, 0] - pred_boxes2[:, 2] / 2,
+            torch.zeros_like(pred_boxes2[:, 0] - pred_boxes2[:, 2] / 2))).long()
         pred_boxes2_corners[:, 1] = torch.floor(torch.max(
-            pred_boxes2[:, 1] - pred_boxes2[:, 3] / 2, torch.zeros_like(pred_boxes2[:, 1] - pred_boxes2[:, 3] / 2))).long()
+            pred_boxes2[:, 1] - pred_boxes2[:, 3] / 2,
+            torch.zeros_like(pred_boxes2[:, 1] - pred_boxes2[:, 3] / 2))).long()
         pred_boxes2_corners[:, 2] = torch.ceil(torch.min(
-            pred_boxes2[:, 0] + pred_boxes2[:, 2] / 2 + 1e-5, nHf * torch.ones_like(pred_boxes2[:, 0] + pred_boxes2[:, 2] / 2))).long()
+            pred_boxes2[:, 0] + pred_boxes2[:, 2] / 2 + 1e-5,
+            nHf * torch.ones_like(pred_boxes2[:, 0] + pred_boxes2[:, 2] / 2))).long()
         pred_boxes2_corners[:, 3] = torch.ceil(torch.min(
-            pred_boxes2[:, 1] + pred_boxes2[:, 3] / 2 + 1e-5, nWf * torch.ones_like(pred_boxes2[:, 1] + pred_boxes2[:, 3] / 2))).long()
+            pred_boxes2[:, 1] + pred_boxes2[:, 3] / 2 + 1e-5,
+            nWf * torch.ones_like(pred_boxes2[:, 1] + pred_boxes2[:, 3] / 2))).long()
 
         loss_def = torch.Tensor([0]).cuda()
         for i in range(inds.size(0)):
             ind = inds[i, 0] * sz_hwa + inds[i, 1] * \
-                sz_hw + inds[i, 2] * nW + inds[i, 3]
+                  sz_hw + inds[i, 2] * nW + inds[i, 3]
             this_im_ind = inds[i, 0]
             score = cls_max_confs[ind] * conf[inds[i, 0],
                                               inds[i, 1], inds[i, 2], inds[i, 3]]
@@ -298,12 +302,13 @@ class RegionLoss(nn.Module):
             dydA_sumk1 = (dy_dz.abs().sum(dim=1)) + 1e-5
             dydA_sumk2 = dydA_sumk1 / (dydA_sumk1.sum(dim=1).sum(dim=1).unsqueeze(1).repeat(
                 1, nHf).unsqueeze(2).repeat(1, 1, nWf))  # normalized  nB x nHf x nWf
-            dydA_sumk3 = dydA_sumk2[this_im_ind, pred_boxes2_corners[ind, 1]:pred_boxes2_corners[ind, 3], pred_boxes2_corners[ind, 0]:pred_boxes2_corners[ind, 2]]
+            dydA_sumk3 = dydA_sumk2[this_im_ind, pred_boxes2_corners[ind, 1]:pred_boxes2_corners[ind, 3],
+                         pred_boxes2_corners[ind, 0]:pred_boxes2_corners[ind, 2]]
             loss_tmp = dydA_sumk2[this_im_ind, :, :].sum(
                 dim=0).sum(dim=0) - dydA_sumk3.sum(dim=0).sum(dim=0)
             loss_def += loss_tmp
 
-# defense loss end
+        # defense loss end
         loss_def = self.lambda1 * loss_def
         loss = loss_x + loss_y + loss_w + loss_h + loss_conf + loss_cls + loss_def
 
@@ -333,7 +338,10 @@ class RegionLoss(nn.Module):
             print('       create loss : %f' % (t4 - t3))
             print('             total : %f' % (t4 - t0))
 
-        print('{0}: nGT {1}, proposals {2}, loss: x {loss_x.val:.3f}({loss_x.avg:.3f}), y {loss_y.val:.3f}({loss_y.avg:.3f}), w {loss_w.val:.3f}({loss_w.avg:.3f}), h {loss_h.val:.3f}({loss_h.avg:.3f}), conf {loss_conf.val:.3f}({loss_conf.avg:.3f}), cls {loss_cls.val:.3f}({loss_cls.avg:.3f}), def {loss_def.val:.3f}({loss_def.avg:.3f}), total {loss.val:.3f}({loss.avg:.3f})'.format(
-            self.seen, nGT, nProposals, loss_x=self.loss_x, loss_y=self.loss_y, loss_w=self.loss_w, loss_h=self.loss_h, loss_conf=self.loss_conf, loss_cls=self.loss_cls, loss_def=self.loss_def, loss=self.loss))
+        print(
+            '{0}: nGT {1}, proposals {2}, loss: x {loss_x.val:.3f}({loss_x.avg:.3f}), y {loss_y.val:.3f}({loss_y.avg:.3f}), w {loss_w.val:.3f}({loss_w.avg:.3f}), h {loss_h.val:.3f}({loss_h.avg:.3f}), conf {loss_conf.val:.3f}({loss_conf.avg:.3f}), cls {loss_cls.val:.3f}({loss_cls.avg:.3f}), def {loss_def.val:.3f}({loss_def.avg:.3f}), total {loss.val:.3f}({loss.avg:.3f})'.format(
+                self.seen, nGT, nProposals, loss_x=self.loss_x, loss_y=self.loss_y, loss_w=self.loss_w,
+                loss_h=self.loss_h, loss_conf=self.loss_conf, loss_cls=self.loss_cls, loss_def=self.loss_def,
+                loss=self.loss))
 
         return loss

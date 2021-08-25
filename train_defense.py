@@ -1,27 +1,21 @@
 from __future__ import print_function
+
 import sys
+
 if len(sys.argv) != 6:
     print('Usage:')
     print('python train.py datacfg cfgfile weightfile backupdir trainlist')
     exit()
 
-import time
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-import torch.backends.cudnn as cudnn
-from torchvision import datasets, transforms
-from torch.autograd import Variable
+from torchvision import transforms
 
 import dataset
-import random
-import math
-import os
 from utils import *
 from cfg import parse_cfg
-from region_loss import RegionLoss
 from darknet_defense import Darknet
+
 # from models.tiny_yolo import TinyYoloNet
 
 # Training settings
@@ -34,7 +28,6 @@ net_options = parse_cfg(cfgfile)[0]
 
 backupdir = sys.argv[4]
 trainlist = sys.argv[5]
-
 
 nsamples = file_lines(trainlist)
 ngpus = 1
@@ -142,6 +135,7 @@ def train(epoch):
 
     def hook_feature(module, input, output):
         features.append(output)
+
     h1 = model._modules.get('models')[16].register_forward_hook(
         hook_feature)  # layer chosen for calculating defense loss
     t1 = time.time()

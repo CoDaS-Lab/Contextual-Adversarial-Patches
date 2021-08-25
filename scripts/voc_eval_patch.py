@@ -4,10 +4,12 @@
 # Written by Bharath Hariharan
 # --------------------------------------------------------
 
-import xml.etree.ElementTree as ET
-import os,sys
 import _pickle as cPickle
+import os
+import xml.etree.ElementTree as ET
+
 import numpy as np
+
 
 def parse_rec(filename):
     """ Parse a PASCAL VOC xml file """
@@ -33,6 +35,7 @@ def parse_rec(filename):
     objects.append(size_struct)
 
     return objects
+
 
 def voc_ap(rec, prec, use_07_metric=False):
     """ ap = voc_ap(rec, prec, [use_07_metric])
@@ -66,6 +69,7 @@ def voc_ap(rec, prec, use_07_metric=False):
         # and sum (\Delta recall) * prec
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
+
 
 def voc_eval(detpath,
              annopath,
@@ -148,9 +152,6 @@ def voc_eval(detpath,
     with open(detfile, 'r') as f:
         lines = f.readlines()
 
-
-
-
     splitlines = [x.strip().split(' ') for x in lines]
 
     # # Added - if detection file is empty
@@ -166,7 +167,6 @@ def voc_eval(detpath,
     sorted_scores = np.sort(-confidence)
     # print(BB.size,len(sorted_ind))
 
-
     BB = BB[sorted_ind, :]
     image_ids = [image_ids[x] for x in sorted_ind]
 
@@ -178,7 +178,7 @@ def voc_eval(detpath,
         R = class_recs[image_ids[d]]
         bb = BB[d, :].astype(float)
         ovmax = -np.inf
-        BBGT = R['bbox'].astype(float)            # Change
+        BBGT = R['bbox'].astype(float)  # Change
 
         width = int(class_recs[image_ids[d]]['size']['width'])
         height = int(class_recs[image_ids[d]]['size']['height'])
@@ -187,18 +187,18 @@ def voc_eval(detpath,
             # compute overlaps
             # intersection
             # print(lenBBGT)
-            ixmin = np.maximum(((BBGT[:, 0])*416)/width, bb[0])             # Change GT annotations to 416*416 size image
-            iymin = np.maximum(((BBGT[:, 1])*416)/height, bb[1])            # Change GT annotations to 416*416 size image
-            ixmax = np.minimum(((BBGT[:, 2])*416)/width, bb[2])             # Change GT annotations to 416*416 size image
-            iymax = np.minimum(((BBGT[:, 3])*416)/height, bb[3])            # Change GT annotations to 416*416 size image
+            ixmin = np.maximum(((BBGT[:, 0]) * 416) / width, bb[0])  # Change GT annotations to 416*416 size image
+            iymin = np.maximum(((BBGT[:, 1]) * 416) / height, bb[1])  # Change GT annotations to 416*416 size image
+            ixmax = np.minimum(((BBGT[:, 2]) * 416) / width, bb[2])  # Change GT annotations to 416*416 size image
+            iymax = np.minimum(((BBGT[:, 3]) * 416) / height, bb[3])  # Change GT annotations to 416*416 size image
             iw = np.maximum(ixmax - ixmin + 1., 0.)
             ih = np.maximum(iymax - iymin + 1., 0.)
             inters = iw * ih
 
             # union
             uni = ((bb[2] - bb[0] + 1.) * (bb[3] - bb[1] + 1.) +
-                   (((BBGT[:, 2])*416)/width - ((BBGT[:, 0])*416)/width + 1.) *
-                   (((BBGT[:, 3])*416)/height - ((BBGT[:, 1])*416)/height + 1.) - inters)
+                   (((BBGT[:, 2]) * 416) / width - ((BBGT[:, 0]) * 416) / width + 1.) *
+                   (((BBGT[:, 3]) * 416) / height - ((BBGT[:, 1]) * 416) / height + 1.) - inters)
 
             overlaps = inters / uni
             ovmax = np.max(overlaps)
@@ -226,19 +226,18 @@ def voc_eval(detpath,
     return rec, prec, ap
 
 
-
-def _do_python_eval(res_prefix, output_dir = 'output'):
-    #_devkit_path = '/data/xiaohang/pytorch-yolo2/VOCdevkit'
-    _devkit_path = '/projects/f_ps848_1/pascalvoc/VOCdevkit'          # Changed
+def _do_python_eval(res_prefix, output_dir='output'):
+    # _devkit_path = '/data/xiaohang/pytorch-yolo2/VOCdevkit'
+    _devkit_path = '/projects/f_ps848_1/pascalvoc/VOCdevkit'  # Changed
     _year = '2007'
-    _classes = ('__background__', # always index 0
-        'aeroplane', 'bicycle', 'bird', 'boat',
-        'bottle', 'bus', 'car', 'cat', 'chair',
-        'cow', 'diningtable', 'dog', 'horse',
-        'motorbike', 'person', 'pottedplant',
-        'sheep', 'sofa', 'train', 'tvmonitor')
+    _classes = ('__background__',  # always index 0
+                'aeroplane', 'bicycle', 'bird', 'boat',
+                'bottle', 'bus', 'car', 'cat', 'chair',
+                'cow', 'diningtable', 'dog', 'horse',
+                'motorbike', 'person', 'pottedplant',
+                'sheep', 'sofa', 'train', 'tvmonitor')
 
-    #filename = '/data/hongji/darknet/results/comp4_det_test_{:s}.txt'
+    # filename = '/data/hongji/darknet/results/comp4_det_test_{:s}.txt'
     filename = res_prefix + '{:s}.txt'
     annopath = os.path.join(
         _devkit_path,
@@ -246,14 +245,13 @@ def _do_python_eval(res_prefix, output_dir = 'output'):
         'Annotations',
         '{:s}.xml')
 
-
     # imagesetfile = os.path.join(
     #     _devkit_path,
     #     'VOC' + _year,
     #     'ImageSets',
     #     'Main',
     #     'test.txt')
-    #cachedir = os.path.join(_devkit_path, 'annotations_cache')
+    # cachedir = os.path.join(_devkit_path, 'annotations_cache')
 
     cachedir = sys.argv[3]
     aps = []
@@ -264,15 +262,14 @@ def _do_python_eval(res_prefix, output_dir = 'output'):
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
 
-
     imagesetfile = sys.argv[2]
-#   print(imagesetfile)
+    #   print(imagesetfile)
     # Changed
     for i, cls in enumerate(_classes):
         if cls == '__background__':
             continue
 
-        if cls != sys.argv[4]:                  # Change
+        if cls != sys.argv[4]:  # Change
             continue
 
         rec, prec, ap = voc_eval(
@@ -311,15 +308,14 @@ def _do_python_eval(res_prefix, output_dir = 'output'):
 
 
 if __name__ == '__main__':
-    #res_prefix = '/data/hongji/darknet/project/voc/results/comp4_det_test_'
-    #classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+    # res_prefix = '/data/hongji/darknet/project/voc/results/comp4_det_test_'
+    # classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
     import sys
+
     if len(sys.argv) == 5:
         res_prefix = sys.argv[1]
-        _do_python_eval(res_prefix, output_dir = 'output')
+        _do_python_eval(res_prefix, output_dir='output')
     else:
         print('Usage:')
         print(' python voc_eval_patch.py result_prefix imagesetfile cachedir classname')
-
-

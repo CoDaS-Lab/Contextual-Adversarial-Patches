@@ -4,14 +4,12 @@
 # Written by Bharath Hariharan
 # --------------------------------------------------------
 
-import xml.etree.ElementTree as ET
-import os,sys
 import _pickle as cPickle
-import numpy as np
-import math
+import os
+import xml.etree.ElementTree as ET
 from shutil import copyfile
-import pdb
 
+import numpy as np
 
 # Patch parameters
 # max_epochs = 1
@@ -50,6 +48,7 @@ def parse_rec(filename):
     objects.append(size_struct)
     return objects
 
+
 def voc_ap(rec, prec, use_07_metric=False):
     """ ap = voc_ap(rec, prec, [use_07_metric])
     Compute VOC AP given precision and recall.
@@ -83,13 +82,14 @@ def voc_ap(rec, prec, use_07_metric=False):
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
 
+
 def remove_fp(detpath,
-             annopath,
-             imagesetfile,
-             classname,
-             cachedir,
-             ovthresh=0.5,
-             use_07_metric=False):
+              annopath,
+              imagesetfile,
+              classname,
+              cachedir,
+              ovthresh=0.5,
+              use_07_metric=False):
     """rec, prec, ap = voc_eval(detpath,
                                 annopath,
                                 imagesetfile,
@@ -169,7 +169,7 @@ def remove_fp(detpath,
 
     # Added
 
-    #newdetfile = detfile.replace('no_class_overlap_patch','no_class_overlap_patch_removed_fp')
+    # newdetfile = detfile.replace('no_class_overlap_patch','no_class_overlap_patch_removed_fp')
     newdetfile = sys.argv[4] + classname + '.txt'
 
     # create dir
@@ -212,7 +212,7 @@ def remove_fp(detpath,
         R = class_recs[image_ids[d]]
         bb = BB[d, :].astype(float)
         ovmax = -np.inf
-        BBGT = R['bbox'].astype(float)     # Change
+        BBGT = R['bbox'].astype(float)  # Change
 
         width = int(class_recs[image_ids[d]]['size']['width'])
         height = int(class_recs[image_ids[d]]['size']['height'])
@@ -220,18 +220,18 @@ def remove_fp(detpath,
         if BBGT.size > 0:
             # compute overlaps
             # intersection
-            ixmin = np.maximum(((BBGT[:, 0])*416)/width, bb[0])             # Change GT annotations to 416*416 size image
-            iymin = np.maximum(((BBGT[:, 1])*416)/height, bb[1])            # Change GT annotations to 416*416 size image
-            ixmax = np.minimum(((BBGT[:, 2])*416)/width, bb[2])             # Change GT annotations to 416*416 size image
-            iymax = np.minimum(((BBGT[:, 3])*416)/height, bb[3])            # Change GT annotations to 416*416 size image
+            ixmin = np.maximum(((BBGT[:, 0]) * 416) / width, bb[0])  # Change GT annotations to 416*416 size image
+            iymin = np.maximum(((BBGT[:, 1]) * 416) / height, bb[1])  # Change GT annotations to 416*416 size image
+            ixmax = np.minimum(((BBGT[:, 2]) * 416) / width, bb[2])  # Change GT annotations to 416*416 size image
+            iymax = np.minimum(((BBGT[:, 3]) * 416) / height, bb[3])  # Change GT annotations to 416*416 size image
             iw = np.maximum(ixmax - ixmin + 1., 0.)
             ih = np.maximum(iymax - iymin + 1., 0.)
             inters = iw * ih
 
             # union
             uni = ((bb[2] - bb[0] + 1.) * (bb[3] - bb[1] + 1.) +
-                   (((BBGT[:, 2])*416)/width - ((BBGT[:, 0])*416)/width + 1.) *
-                   (((BBGT[:, 3])*416)/height - ((BBGT[:, 1])*416)/height + 1.) - inters)
+                   (((BBGT[:, 2]) * 416) / width - ((BBGT[:, 0]) * 416) / width + 1.) *
+                   (((BBGT[:, 3]) * 416) / height - ((BBGT[:, 1]) * 416) / height + 1.) - inters)
 
             overlaps = inters / uni
             ovmax = np.max(overlaps)
@@ -242,7 +242,6 @@ def remove_fp(detpath,
                 if not R['det'][jmax]:
                     tp[d] = 1.
                     R['det'][jmax] = 1
-
 
                     # if true positive - write into another file
                     filewr.write(lines[sorted_ind[d]])
@@ -257,22 +256,21 @@ def remove_fp(detpath,
                     # xmax_new = math.ceil(bb[2]/width*416)
                     # ymax_new = math.ceil(bb[3]/height*416)
 
-
-                    A = min(bb[2], start_x+patchSize)
+                    A = min(bb[2], start_x + patchSize)
                     B = max(bb[0], start_x)
-                    C = min(bb[3], start_y+patchSize)
+                    C = min(bb[3], start_y + patchSize)
                     D = max(bb[1], start_y)
 
                     # iw = np.maximum(C - A + 1., 0.)
                     # ih = np.maximum(D - B + 1., 0.)
-                    iw = np.maximum(A - B + 1., 0.)                 # Last moment bug-fix
+                    iw = np.maximum(A - B + 1., 0.)  # Last moment bug-fix
                     ih = np.maximum(C - D + 1., 0.)
                     inters = iw * ih
 
                     # union
                     uni = ((bb[2] - bb[0] + 1.) * (bb[3] - bb[1] + 1.) +
-                           ((start_x+patchSize) - (start_x) + 1.) *
-                           ((start_y+patchSize) - (start_y) + 1.) - inters)
+                           ((start_x + patchSize) - (start_x) + 1.) *
+                           ((start_y + patchSize) - (start_y) + 1.) - inters)
 
                     overlaps = inters / uni
 
@@ -289,23 +287,22 @@ def remove_fp(detpath,
             # xmax_new = math.ceil(bb[2]/width*416)
             # ymax_new = math.ceil(bb[3]/height*416)
 
-
             # find intersection of bounding box with patch
-            A = min(bb[2], start_x+patchSize)
+            A = min(bb[2], start_x + patchSize)
             B = max(bb[0], start_x)
-            C = min(bb[3], start_y+patchSize)
+            C = min(bb[3], start_y + patchSize)
             D = max(bb[1], start_y)
 
             # iw = np.maximum(C - A + 1., 0.)
             # ih = np.maximum(D - B + 1., 0.)
-            iw = np.maximum(A - B + 1., 0.)                 # Last moment bug-fix
+            iw = np.maximum(A - B + 1., 0.)  # Last moment bug-fix
             ih = np.maximum(C - D + 1., 0.)
             inters = iw * ih
 
             # union
             uni = ((bb[2] - bb[0] + 1.) * (bb[3] - bb[1] + 1.) +
-                   ((start_x+patchSize) - (start_x) + 1.) *
-                   ((start_y+patchSize) - (start_y) + 1.) - inters)
+                   ((start_x + patchSize) - (start_x) + 1.) *
+                   ((start_y + patchSize) - (start_y) + 1.) - inters)
 
             overlaps = inters / uni
 
@@ -313,7 +310,6 @@ def remove_fp(detpath,
                 continue
             else:
                 filewr.write(lines[sorted_ind[d]])
-
 
     # # compute precision recall
     # fp = np.cumsum(fp)
@@ -328,18 +324,17 @@ def remove_fp(detpath,
     filewr.close()
 
 
-
-def _do_python_eval(res_prefix, output_dir = 'output'):
-    _devkit_path = '/projects/f_ps848_1/pascalvoc/VOCdevkit'          # Changed
+def _do_python_eval(res_prefix, output_dir='output'):
+    _devkit_path = '/projects/f_ps848_1/pascalvoc/VOCdevkit'  # Changed
     _year = '2007'
-    _classes = ('__background__', # always index 0
-        'aeroplane', 'bicycle', 'bird', 'boat',
-        'bottle', 'bus', 'car', 'cat', 'chair',
-        'cow', 'diningtable', 'dog', 'horse',
-        'motorbike', 'person', 'pottedplant',
-        'sheep', 'sofa', 'train', 'tvmonitor')
+    _classes = ('__background__',  # always index 0
+                'aeroplane', 'bicycle', 'bird', 'boat',
+                'bottle', 'bus', 'car', 'cat', 'chair',
+                'cow', 'diningtable', 'dog', 'horse',
+                'motorbike', 'person', 'pottedplant',
+                'sheep', 'sofa', 'train', 'tvmonitor')
 
-    #filename = '/data/hongji/darknet/results/comp4_det_test_{:s}.txt'
+    # filename = '/data/hongji/darknet/results/comp4_det_test_{:s}.txt'
     filename = res_prefix + '{:s}.txt'
     annopath = os.path.join(
         _devkit_path,
@@ -347,15 +342,13 @@ def _do_python_eval(res_prefix, output_dir = 'output'):
         'Annotations',
         '{:s}.xml')
 
-
     # imagesetfile = os.path.join(
     #     _devkit_path,
     #     'VOC' + _year,
     #     'ImageSets',
     #     'Main',
     #     'test.txt')
-    #cachedir = os.path.join(_devkit_path, 'annotations_cache')
-
+    # cachedir = os.path.join(_devkit_path, 'annotations_cache')
 
     cachedir = sys.argv[3]
     aps = []
@@ -366,12 +359,11 @@ def _do_python_eval(res_prefix, output_dir = 'output'):
     # if not os.path.isdir(output_dir):
     #     os.mkdir(output_dir)
 
-
     imagesetfile = sys.argv[2]
     print(imagesetfile)
     # Changed
     for i, cls in enumerate(_classes):
-        if cls != sys.argv[5]:                  # Change
+        if cls != sys.argv[5]:  # Change
             if cls != '__background__':
                 copyfile(res_prefix + cls + '.txt', sys.argv[4] + cls + '.txt')
             continue
@@ -419,13 +411,12 @@ def _do_python_eval(res_prefix, output_dir = 'output'):
 
 if __name__ == '__main__':
     import sys
+
     if len(sys.argv) == 6:
         res_prefix = sys.argv[1]
         if not os.path.exists(os.path.dirname(sys.argv[4])):
             os.makedirs(os.path.dirname(sys.argv[4]))
-        _do_python_eval(res_prefix, output_dir = 'output')
+        _do_python_eval(res_prefix, output_dir='output')
     else:
         print('Usage:')
         print(' python remove_fp_patch.py result_prefix imagesetfile cachedir new_result_prefix classname')
-
-

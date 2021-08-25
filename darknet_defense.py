@@ -1,9 +1,9 @@
-import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from region_loss_defense import RegionLoss
+
 from cfg import *
+from region_loss_defense import RegionLoss
 
 
 class MaxPoolStride1(nn.Module):
@@ -22,13 +22,13 @@ class Reorg(nn.Module):
 
     def forward(self, x):
         stride = self.stride
-        assert(x.data.dim() == 4)
+        assert (x.data.dim() == 4)
         B = x.data.size(0)
         C = x.data.size(1)
         H = x.data.size(2)
         W = x.data.size(3)
-        assert(H % stride == 0)
-        assert(W % stride == 0)
+        assert (H % stride == 0)
+        assert (W % stride == 0)
         ws = stride
         hs = stride
         x = x.view(B, C, H // hs, hs, W // ws, ws).transpose(3, 4).contiguous()
@@ -53,6 +53,7 @@ class GlobalAvgPool2d(nn.Module):
         x = x.view(N, C)
         return x
 
+
 # for route and shortcut
 
 
@@ -62,6 +63,7 @@ class EmptyModule(nn.Module):
 
     def forward(self, x):
         return x
+
 
 # support route shortcut and reorg
 
@@ -95,7 +97,8 @@ class Darknet(nn.Module):
             #    return x
             if block['type'] == 'net':
                 continue
-            elif block['type'] == 'convolutional' or block['type'] == 'maxpool' or block['type'] == 'reorg' or block['type'] == 'avgpool' or block['type'] == 'softmax' or block['type'] == 'connected':
+            elif block['type'] == 'convolutional' or block['type'] == 'maxpool' or block['type'] == 'reorg' or block[
+                'type'] == 'avgpool' or block['type'] == 'softmax' or block['type'] == 'connected':
                 x = self.models[ind](x)
                 outputs[ind] = x
             elif block['type'] == 'route':
@@ -163,7 +166,7 @@ class Darknet(nn.Module):
                         prev_filters, filters, kernel_size, stride, pad, bias=False))
                     model.add_module('bn{0}'.format(
                         conv_id), nn.BatchNorm2d(filters))
-                    #model.add_module('bn{0}'.format(conv_id), BN2d(filters))
+                    # model.add_module('bn{0}'.format(conv_id), BN2d(filters))
                 else:
                     model.add_module('conv{0}'.format(conv_id), nn.Conv2d(
                         prev_filters, filters, kernel_size, stride, pad))
@@ -215,9 +218,9 @@ class Darknet(nn.Module):
                 if len(layers) == 1:
                     prev_filters = out_filters[layers[0]]
                 elif len(layers) == 2:
-                    assert(layers[0] == ind - 1)
+                    assert (layers[0] == ind - 1)
                     prev_filters = out_filters[layers[0]
-                                               ] + out_filters[layers[1]]
+                                   ] + out_filters[layers[1]]
                 out_filters.append(prev_filters)
                 models.append(EmptyModule())
             elif block['type'] == 'shortcut':

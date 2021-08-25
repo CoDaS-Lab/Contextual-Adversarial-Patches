@@ -343,7 +343,7 @@ def remove_fp(detpath,
 
 
 def _do_python_eval(res_prefix, output_dir = 'output'):
-    _devkit_path = '<devkit_root>/detection-patch/VOCdevkit'          # Changed
+    _devkit_path = '/projects/f_ps848_1/pascalvoc/detection-patch/VOCdevkit'          # Changed
     # _devkit_path = '/VOCdevkit'                                                 # add your own devkit path
     _year = '2007'
     _classes = ('__background__', # always index 0

@@ -60,11 +60,26 @@ wget http://pjreddie.com/media/files/yolo-voc.weights
 ```
 
 ## Per Image Patch
+ZB:
+``` bash
+mkdir dataset/perimagepatch/
+```
+
 ```bash
 bash run_pipeline_per_image_patch.sh
 ```
 
 This script trains contextual adversarial patch per image of a chosen category and evaluates YOLO on the patched images. Please change the VOC category name and the category index to run for desired category.
+
+ZB: category names and index are based on `classes` in train_per_image_patch.py and are given as arguments in run_pipeline_per_image_patch.sh to train_per_image_patch.py as the path names (use replace) and `reqd_class_index` (the 1st number) respectively 
+
+```
+classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", \
+             "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+```
+
+
+
 
 ## Universal Patch
 ```bash
